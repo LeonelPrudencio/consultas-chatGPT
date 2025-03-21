@@ -15,11 +15,24 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import os
+import pandas as pd
 import json
 import re
 from datetime import datetime
 
-def open_chatgpt_and_query(consulta, n):
+
+###############################################################################
+# Función para realizar n consultas (la misma consulta)
+###############################################################################
+def chat_gpt_consultas(consulta, n):
+    """
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    1.- Abriendo navegador e ingresando credenciales de usuario
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    """
+    # Crear el DataFrame vacío para almacenar los resultados
+    resultados_df = pd.DataFrame(columns=['timestamp', 'consulta', 'response', 'chatgpt_version'])
+
     # Crear un User-Agent aleatorio
     ua = UserAgent()
     user_agent = ua.random
@@ -35,184 +48,175 @@ def open_chatgpt_and_query(consulta, n):
     wait = WebDriverWait(driver, 30)
     
     # Navegar a ChatGPT
-    print("Abriendo navegador...")
+    print("--> Abriendo navegador...")
     driver.get("https://chat.openai.com")
     
-    print("Navegador abierto. Por favor, inicia sesión manualmente.")
-    print("Cuando estés listo para continuar, presiona Enter en la consola.")
+    # El usuario ingresa sus credenciales y luego debe dar enter en la consola
+    print(">>> Navegador abierto. Por favor, inicia sesión manualmente.")
+    print(">>> Cuando estés listo para continuar, presiona Enter en la consola.")
     
     # Esperar a que el usuario indique que está listo
     input()
     
-    # Consulta que queremos realizar
-    query = consulta
-    print(f"Realizando consulta principal: '{query}'")
-    
-    response_text = ""
-    chatgpt_version = "Versión desconocida"
-    
-    try:
-        # Intentar diferentes selectores para el área de texto
-        textarea_selectors = [
-            "//div[@id='prompt-textarea']", 
-            "//div[contains(@class, 'ProseMirror')]",
-            "//div[@contenteditable='true']",
-            "//div[contains(@placeholder, 'Pregunta lo que quieras')]",
-            "//div[contains(@data-placeholder, 'Pregunta lo que quieras')]"
-        ]
-        
-        textarea = None
-        for selector in textarea_selectors:
-            try:
-                textarea = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                print(f"Área de texto encontrada con selector: {selector}")
-                break
-            except:
-                print(f"Selector no encontrado: {selector}")
-                continue
-        
-        if textarea:
+    # Inicializando las variables a extraer
+    respuesta_text = ""
+    chatgpt_version = "desconocido"
+
+    for i in range(n):
+        # Consulta que queremos realizar
+        print(f"\n--> Realizando consulta principal: '{i+1}'")
+
+        try:
+            """
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            2.- Consulta principal
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            """
+            # Identificando el área del prompt
+            textarea = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@id='prompt-textarea']")))
+
             # Hacer clic en el área de texto
             textarea.click()
-            time.sleep(1)
-            
+            time.sleep(2)
+                
             # Enviar la consulta principal
-            textarea.send_keys(query)
-            time.sleep(1)
+            textarea.send_keys(consulta)
+            time.sleep(3)
             textarea.send_keys(Keys.ENTER)
-            print("Consulta principal enviada. Esperando respuesta...")
-            
+            print("--> Consulta principal enviada. Esperando respuesta...")
+                
             # Esperar un tiempo para que se cargue inicialmente la respuesta
-            time.sleep(5)
-            
-            # Esperar a que aparezca la respuesta (buscar un elemento que contenga la respuesta de ChatGPT)
-            response_selectors = [
-                "//div[contains(@class, 'markdown')]",
-                "//div[contains(@class, 'message-content')]",
-                "//div[contains(@data-message-author-role, 'assistant')]",
-                "//div[contains(@class, 'assistant')]//div[contains(@class, 'text-message')]"
-            ]
-            
-            response_element = None
-            for selector in response_selectors:
-                try:
-                    # Esperar a que el elemento de respuesta esté presente y visible
-                    response_element = wait.until(EC.visibility_of_element_located((By.XPATH, selector)))
-                    print(f"Elemento de respuesta encontrado con selector: {selector}")
-                    break
-                except:
-                    print(f"Selector de respuesta no encontrado: {selector}")
-                    continue
-            
-            # Esperar a que la respuesta se complete (ChatGPT puede tardar en generar la respuesta completa)
-            # Este tiempo puede necesitar ajustes según la longitud de la respuesta esperada
             time.sleep(15)
-            
-            if response_element:
-                # Obtener el texto de la respuesta
-                response_text = response_element.text
-                print("Respuesta principal obtenida correctamente.")
+
+            """
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            3.- Consulta para versión de chatGPT
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            """
+            # Ahora, preguntar por la versión del modelo
+            print("--> Preguntando por la versión del modelo...")
+
+            # Limpiar el área de texto si es necesario
+            textarea.clear()
+
+            # Hacer clic en el área de texto
+            textarea.click()
+            time.sleep(2)
                 
-                # Ahora, preguntar por la versión del modelo
-                print("Preguntando por la versión del modelo...")
-                
-                # Limpiar el área de texto si es necesario
-                try:
-                    textarea.clear()
-                except:
-                    # Si no se puede limpiar, buscar el área de texto nuevamente
-                    for selector in textarea_selectors:
-                        try:
-                            textarea = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                            break
-                        except:
-                            continue
-                
-                # Hacer clic en el área de texto nuevamente
-                textarea.click()
-                time.sleep(1)
-                
-                # Enviar la consulta para averiguar la versión
-                version_query = "¿Qué versión de ChatGPT usaste para la respuesta anterior?"
-                textarea.send_keys(version_query)
-                time.sleep(1)
-                textarea.send_keys(Keys.ENTER)
-                print("Consulta de versión enviada. Esperando respuesta...")
-                
-                # Esperar a que aparezca la respuesta sobre la versión
-                time.sleep(10)
-                
-                # Buscar la respuesta sobre la versión (el último mensaje del asistente)
-                version_response_selectors = [
-                    "//div[contains(@class, 'markdown')]",
-					"//div[contains(@class, 'message-content')]",
-					"//div[contains(@data-message-author-role, 'assistant')]",
-					"//div[contains(@class, 'assistant')]//div[contains(@class, 'text-message')]"
-					]
-                
-                version_response_element = None
-                for selector in version_response_selectors:
-                    try:
-                        version_response_element = wait.until(EC.visibility_of_element_located((By.XPATH, selector)))
-                        break
-                    except:
-                        continue
-                
-                if version_response_element:
-                    version_response_text = version_response_element.text
-                    print("Respuesta de versión obtenida.")
+            # Enviar la consulta principal
+            textarea.send_keys("¿Qué versión de ChatGPT usaste para la respuesta anterior? chatGPT-4-turbo, chatGPT-4 o chatGPT-3.5, solo indica la versión")
+            time.sleep(3)
+            textarea.send_keys(Keys.ENTER)
+            print("--> Consulta sobre la versión enviada. Esperando respuesta...")
                     
-                    # Buscar la versión en la respuesta
-                    chatgpt_version = version_response_text
-                    print(f"Versión detectada: {chatgpt_version}")
-                else:
-                    print("No se pudo obtener la respuesta sobre la versión.")
-            else:
-                print("No se pudo encontrar el elemento que contiene la respuesta principal.")
-        else:
-            print("No se pudo encontrar el área de texto para enviar la consulta.")
+            # Esperar a que aparezca la respuesta sobre la versión
+            time.sleep(10)
+
+            """
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            4.- Almacenando respuestas
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            """
+            print("--> Almacenando respuestas...")
+
+            # Identificando el lugar de las respuestas
+            #respuesta = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@class, 'markdown')]")))
+            respuesta = driver.find_elements(By.CSS_SELECTOR, 'div.markdown.prose.w-full.break-words.dark\\:prose-invert.dark')
+
+            # Respuesta principal
+            respuesta_text = respuesta[0].text
+
+            # Versión del chatGPT utilizada
+            chatgpt_version = respuesta[1].text
+
+            # Agregar los datos al DataFrame
+            nueva_fila = {
+                'timestamp': datetime.now().isoformat(),
+                'consulta': consulta,
+                'response': respuesta_text,
+                'chatgpt_version': chatgpt_version
+            }
+            
+            # Guardando respuesta en el data frame
+            resultados_df = pd.concat([resultados_df, pd.DataFrame([nueva_fila])], ignore_index=True)
+            guardar_df_a_json(resultados_df)
+
+            print(f"--> Datos de la consulta {i+1} agregados al DataFrame y al JSON")
         
-        # Guardar la consulta y la respuesta en un archivo JSON
-        save_to_json(query, response_text, chatgpt_version)
+        except Exception as e:
+            print(f"Error al realizar la consulta: {e}")
+            # Agregar los datos que tengamos hasta ahora al DataFrame
+            if respuesta_text:
+                nueva_fila = {
+                    'timestamp': datetime.now().isoformat(),
+                    'consulta': consulta,
+                    'response': respuesta_text,
+                    'chatgpt_version': chatgpt_version
+                }
+
+                resultados_df = pd.concat([resultados_df, pd.DataFrame([nueva_fila])], ignore_index=True)
+                guardar_df_a_json(resultados_df)
+
+                print(f"--> Datos de la consulta {i+1} agregados al DataFrame y al JSON")
+
+        """
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        5.- Nueva consulta
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        """
+        # Esperar a que el elemento sea clickeable y hacer clic usando data-testid
+        boton_nuevo_chat = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-testid='create-new-chat-button']")))
+        boton_nuevo_chat.click()
+        time.sleep(2)
+
+        # Se abre un nuevo chat y se realiza la misma consulta
+
+    """
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    6.- Guardar todos los resultados en un archivo JSON
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    """
+    print("--> Guardando todos los resultados en un data frame")
+
+    # Guardando en un archivo json
+    guardar_df_a_json(resultados_df, "chatGPT_respuestas_respaldo.json")
     
-    except Exception as e:
-        print(f"Error al realizar la consulta: {e}")
-        # Intentar guardar lo que tengamos hasta ahora
-        if response_text:
-            save_to_json(query, response_text, chatgpt_version)
-    
-    print("El navegador permanecerá abierto. Para salir, presiona Ctrl+C en la consola.")
-    
+    print(">>> El navegador permanecerá abierto. Para salir, presiona Ctrl+C en la consola.")
     # Mantener el navegador abierto
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("Cerrando el navegador...")
+        print(">>> Cerrando el navegador...")
         driver.quit()
 
 
-def save_to_json(query, response, chatgpt_version):
-    """
-    Guarda la consulta, la respuesta y la versión de ChatGPT en un archivo JSON
-    """
-    # Crear un nombre de archivo basado en la fecha y hora
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"chatgpt_respuestas.json"
+###############################################################################
+# Función para guardar los resultados en un json
+###############################################################################
+def guardar_df_a_json(resultados_df, nombre_archivo='chatGPT_respuestas.json'):
+    # Verificar si el archivo ya existe
+    if os.path.exists(nombre_archivo):
+        # Cargar el contenido existente del archivo JSON
+        with open(nombre_archivo, 'r', encoding='utf-8') as archivo:
+            datos_existentes = json.load(archivo)
+    else:
+        # Si el archivo no existe, inicializar una lista vacía
+        datos_existentes = []
+
+    # Convertir el DataFrame a una lista de diccionarios
+    nuevos_datos = resultados_df.to_dict(orient='records')
+
+    # Agregar los nuevos datos a los existentes
+    datos_existentes.extend(nuevos_datos)
+
+    # Guardar la lista combinada de nuevo en el archivo JSON
+    with open(nombre_archivo, 'w', encoding='utf-8') as archivo:
+        json.dump(datos_existentes, archivo, ensure_ascii=False, indent=4)
     
-    # Crear el diccionario de datos
-    data = {
-        "timestamp": datetime.now().isoformat(),
-        "chatgpt_version": chatgpt_version,
-        "query": query,
-        "response": response
-    }
-    
-    # Guardar los datos en el archivo JSON
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-    
-    print(f"Datos guardados en el archivo: {filename}")
+    print(f"--> Datos guardados en el archivo: {nombre_archivo}")
+
+
 
 if __name__ == "__main__":
     # Instalar dependencias si no están instaladas
@@ -226,4 +230,4 @@ if __name__ == "__main__":
         os.system("pip install undetected-chromedriver fake-useragent selenium")
         print("Dependencias instaladas.")
     
-    open_chatgpt_and_query( "Dame 10 ejercicios de polinomios", 1)
+    chat_gpt_consultas( "Dame 10 ejercicios de polinomios", 25)
