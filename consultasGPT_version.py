@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 """
-Este script hace web scraping utilizando selenium y guarda los datos en JSON.
+Este script realiza n consultas automatizadas al chatGPT,
+guardando los resultados en un archivo json
 Autor: Leonel Antonio Prudencio
 Fecha: 2025-02-07
 Versión: 2.4
@@ -21,9 +22,9 @@ import re
 from datetime import datetime
 
 
-###############################################################################
+###########################################################################
 # Función para realizar n consultas (la misma consulta)
-###############################################################################
+###########################################################################
 def chat_gpt_consultas(consulta, n):
     """
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -53,6 +54,11 @@ def chat_gpt_consultas(consulta, n):
     
     # El usuario ingresa sus credenciales y luego debe dar enter en la consola
     print(">>> Navegador abierto. Por favor, inicia sesión manualmente.")
+    ##################################################################################
+    # En esta parte el usuario debe ingresar sus credenciales, una vez se tiene eso
+    # el programa realizará las consultas de forma automática y guardando los resul-
+    # tados en un archivo json
+    ##################################################################################
     print(">>> Cuando estés listo para continuar, presiona Enter en la consola.")
     
     # Esperar a que el usuario indique que está listo
