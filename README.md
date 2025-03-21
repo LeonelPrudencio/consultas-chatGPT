@@ -1,0 +1,1 @@
+# consultas-chatGPT
