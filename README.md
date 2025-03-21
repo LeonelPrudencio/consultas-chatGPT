@@ -1,7 +1,5 @@
 # consultas-chatGPT
 
-# Automatización de Consultas a ChatGPT
-
 ## Descripción General
 Este repositorio contiene un script en Python que automatiza múltiples consultas a ChatGPT, recopilando y almacenando las respuestas en un archivo JSON. El script está diseñado con fines de investigación, permitiéndote enviar la misma consulta varias veces y analizar la variación en las respuestas.
 
