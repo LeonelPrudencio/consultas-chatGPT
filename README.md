@@ -1,9 +1,9 @@
-# consultas-chatGPT
+# 🤖 Automatización de consultas a ChatGPT
 
-## Descripción General
+## 📝 Descripción General
 Este repositorio contiene un script en Python que automatiza múltiples consultas a ChatGPT, recopilando y almacenando las respuestas en un archivo JSON. El script está diseñado con fines de investigación, permitiéndote enviar la misma consulta varias veces y analizar la variación en las respuestas.
 
-## Características
+## ✨ Características
 - Automatiza múltiples consultas idénticas a ChatGPT
 - Captura las respuestas de ChatGPT
 - Identifica automáticamente qué versión de ChatGPT fue utilizada (GPT-3.5, GPT-4, etc.)
@@ -11,13 +11,13 @@ Este repositorio contiene un script en Python que automatiza múltiples consulta
 - Utiliza automatización de navegador no detectable para evitar bloqueos
 - Emplea agentes de usuario aleatorios para cada sesión
 
-## Requisitos
+## 📋 Requisitos
 - Python 3.6 o superior
 - Navegador Chrome instalado
 - Conexión a Internet
 - Cuenta de OpenAI ChatGPT
 
-## Dependencias
+## 📦 Dependencias
 El script requiere los siguientes paquetes de Python:
 - `undetected_chromedriver`: Para automatización del navegador que evita la detección
 - `fake_useragent`: Para generar agentes de usuario aleatorios
@@ -25,7 +25,7 @@ El script requiere los siguientes paquetes de Python:
 - `pandas`: Para manipulación y almacenamiento de datos
 - `re`: Para expresiones regulares (parte de la biblioteca estándar de Python)
 
-## Instalación
+## 💻 Instalación
 
 1. Clona este repositorio:
 ```bash
@@ -40,7 +40,7 @@ pip install undetected-chromedriver fake-useragent selenium pandas
 
 Alternativamente, el script intentará instalar las dependencias requeridas si no están ya presentes.
 
-## Uso
+## 🚀 Uso
 
 1. Ejecuta el script:
 ```bash
@@ -63,7 +63,7 @@ python chatgpt_automation.py
 
 6. Para detener el script, presiona Ctrl+C en la consola
 
-## Personalización
+## ⚙️ Personalización
 
 Para cambiar la consulta o el número de iteraciones, modifica la llamada de función al final del script:
 
@@ -73,7 +73,7 @@ chat_gpt_consultas("Tu consulta aquí", numero_de_iteraciones)
 
 Por ejemplo, la configuración actual ejecuta 25 iteraciones con la consulta "Dame 10 ejercicios de polinomios".
 
-## Formato de Salida
+## 📊 Formato de Salida
 
 El archivo JSON de salida contiene un array de objetos con la siguiente estructura:
 
@@ -89,15 +89,15 @@ El archivo JSON de salida contiene un array de objetos con la siguiente estructu
 ]
 ```
 
-## Notas Importantes
+## ⚠️ Notas Importantes
 
 - El script requiere inicio de sesión manual en ChatGPT debido a las medidas de seguridad de OpenAI
 - El navegador Chrome permanecerá abierto hasta que termines manualmente el script
 - La automatización excesiva podría violar los términos de servicio de OpenAI, úsalo responsablemente
 - El script utiliza WebDriverWait con un tiempo de espera de 30 segundos; ajústalo si es necesario para conexiones más lentas
 
-## Autor
-Leonel Antonio Prudencio Castro
+## 👨‍💻 Autor
+Leonel Antonio Prudencio
 
-## Versión
+## 🔖 Versión
 2.4 (2025-02-07)
