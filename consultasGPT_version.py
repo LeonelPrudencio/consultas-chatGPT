@@ -66,7 +66,7 @@ def chat_gpt_consultas(consulta, n):
 
     for i in range(n):
         # Consulta que queremos realizar
-        print(f"\n--> Realizando consulta principal: '{i+1}'")
+        print(f"\n--> Realizando consulta principal: {i+1}")
 
         # Inicializando las variables a extraer
         respuesta_text = ""
