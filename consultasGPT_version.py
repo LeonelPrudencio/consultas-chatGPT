@@ -63,14 +63,14 @@ def chat_gpt_consultas(consulta, n):
     
     # Esperar a que el usuario indique que está listo
     input()
-    
-    # Inicializando las variables a extraer
-    respuesta_text = ""
-    chatgpt_version = "desconocido"
 
     for i in range(n):
         # Consulta que queremos realizar
         print(f"\n--> Realizando consulta principal: '{i+1}'")
+
+        # Inicializando las variables a extraer
+        respuesta_text = ""
+        chatgpt_version = "desconocido"
 
         try:
             """
